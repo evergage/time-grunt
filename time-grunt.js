@@ -12,7 +12,7 @@ function log(str) {
 	write(str + '\n', 'utf8')
 }
 
-module.exports = function (grunt, exclude) {
+module.exports = function (grunt, exclude, ignoreEmptyExecutions) {
 	var BAR_CHAR = process.platform === 'win32' ? '■' : '▇';
 	var now = new Date();
 	var startTimePretty = dateTime();
@@ -21,6 +21,7 @@ module.exports = function (grunt, exclude) {
 	var prevTaskName = 'loading tasks';
 	var tableData = [];
 	var exclude = exclude || [];
+	var ignoreEmptyExecutions = ignoreEmptyExecutions || false;
 
 	if (argv.indexOf('--help') !== -1 ||
 	    argv.indexOf('-h') !== -1 ||
@@ -84,16 +85,7 @@ module.exports = function (grunt, exclude) {
 		}
 
 		function shorten(taskName) {
-			var nameLength = taskName.length;
-
-			if (nameLength <= maxBarWidth) {
-				return taskName;
-			}
-
-			var partLength = Math.floor((maxBarWidth - 3) / 2);
-			var start = taskName.substr(0, partLength + 1);
-			var end = taskName.substr(nameLength - partLength);
-			return start.trim() + '...' + end.trim();
+			return taskName;
 		}
 
 		function createBar(percentage) {
@@ -148,8 +140,13 @@ module.exports = function (grunt, exclude) {
 		}
 
 		// `grunt.log.header` should be unhooked above, but in some cases it's not
-		log('\n\n' + chalk.underline('Execution Time') + chalk.gray(' (' + startTimePretty + ')'));
-		log(formatTable(tableData) + '\n');
+		if (ignoreEmptyExecutions !== true ||
+				(tableData != null
+				&& (tableData.length > 1
+						|| (tableData.length === 1 && tableData[0][0] !== "loading tasks")))) {
+			log('\n\n' + chalk.underline('Execution Time') + chalk.gray(' (' + startTimePretty + ')'));
+			log(formatTable(tableData) + '\n');
+		}
 		process.exit(exitCode);
 	});
 };
